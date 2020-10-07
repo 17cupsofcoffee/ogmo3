@@ -16,5 +16,5 @@ This project adheres to Semantic Versioning.
 
 * Initial release!
 
-[0.0.2]: https://github.com/17cupsofcoffee/tetra/compare/0.0.1..0.0.2
-[0.0.1]: https://github.com/17cupsofcoffee/tetra/compare/41a781f..0.0.1
+[0.0.2]: https://github.com/17cupsofcoffee/ogmo3/compare/0.0.1..0.0.2
+[0.0.1]: https://github.com/17cupsofcoffee/ogmo3/compare/41a781f..0.0.1
