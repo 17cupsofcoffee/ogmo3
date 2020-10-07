@@ -6,6 +6,8 @@ All breaking changes will be explicitly labelled, to make it easier to assess th
 
 This project adheres to Semantic Versioning.
 
-## Upcoming
+## [0.0.1] - 2020-10-07
 
 * Initial release!
+
+[0.1.0]: https://github.com/17cupsofcoffee/tetra/compare/41a781f..0.0.1
