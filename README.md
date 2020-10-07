@@ -1,5 +1,6 @@
 # ogmo3
 
+[![Build Status](https://img.shields.io/github/workflow/status/17cupsofcoffee/ogmo3/CI%20Build/main)](https://github.com/17cupsofcoffee/ogmo3/actions?query=branch%3Amain)
 [![Crates.io](https://img.shields.io/crates/v/ogmo3.svg)](https://crates.io/crates/ogmo3)
 [![Documentation](https://docs.rs/ogmo3/badge.svg)](https://docs.rs/ogmo3)
 [![License](https://img.shields.io/crates/l/ogmo3.svg)](LICENSE)
