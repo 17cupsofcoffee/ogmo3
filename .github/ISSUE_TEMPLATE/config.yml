@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: "Discord: Game Development in Rust"
+    url: https://discord.gg/yNtPTb2
+    about: "For discussion of game development in Rust, and showing off your projects"
