@@ -1,0 +1,19 @@
+[package]
+name = "ogmo3"
+version = "0.0.1"
+authors = ["Joe Clay <27cupsofcoffee@gmail.com>"]
+edition = "2018"
+license = "MIT"
+repository = "https://github.com/17cupsofcoffee/ogmo3"
+documentation = "https://docs.rs/ogmo3"
+readme = "README.md"
+keywords = ["game", "gamedev", "map", "ogmo", "level"]
+categories = ["game-development"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = { version = "1.0.116", features = ["derive"] } 
+serde_json = "1.0.58"
+serde_repr = "0.1"
+hashbrown = { version = "0.9", features = ["serde"] }
