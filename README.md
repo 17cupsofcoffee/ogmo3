@@ -1,5 +1,9 @@
 # ogmo3
 
+[![Crates.io](https://img.shields.io/crates/v/ogmo3.svg)](https://crates.io/crates/ogmo3)
+[![Documentation](https://docs.rs/ogmo3/badge.svg)](https://docs.rs/ogmo3)
+[![License](https://img.shields.io/crates/l/ogmo3.svg)](LICENSE)
+
 `ogmo3` is a Rust crate for parsing projects and levels created with [Ogmo Editor 3](https://ogmo-editor-3.github.io/).
 
 ## Design Goals
