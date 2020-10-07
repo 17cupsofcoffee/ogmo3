@@ -45,6 +45,9 @@ impl StdError for Error {
 /// An X and Y value.
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Deserialize)]
 pub struct Vec2<T> {
-    x: T,
-    y: T,
+    /// The X component.
+    pub x: T,
+
+    /// The Y component.
+    pub y: T,
 }

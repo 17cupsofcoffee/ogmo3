@@ -6,8 +6,15 @@ All breaking changes will be explicitly labelled, to make it easier to assess th
 
 This project adheres to Semantic Versioning.
 
+## [0.0.2] - 2020-10-07
+
+### Fixed
+
+* `Vec2`'s fields are now public.
+
 ## [0.0.1] - 2020-10-07
 
 * Initial release!
 
+[0.0.2]: https://github.com/17cupsofcoffee/tetra/compare/0.0.1..0.0.2
 [0.0.1]: https://github.com/17cupsofcoffee/tetra/compare/41a781f..0.0.1
