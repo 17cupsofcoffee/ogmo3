@@ -10,4 +10,4 @@ This project adheres to Semantic Versioning.
 
 * Initial release!
 
-[0.1.0]: https://github.com/17cupsofcoffee/tetra/compare/41a781f..0.0.1
+[0.0.1]: https://github.com/17cupsofcoffee/tetra/compare/41a781f..0.0.1
