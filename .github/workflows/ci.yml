@@ -11,6 +11,11 @@ jobs:
       matrix:
         rust: [stable, beta, nightly]
     steps:
+    steps:
+    - name: Install native dependencies for examples
+      run: |
+        sudo apt-get update
+        sudo apt-get install libsdl2-dev libasound2-dev
     - uses: hecrj/setup-rust-action@v1
       with:
         rust-version: ${{ matrix.rust }}
