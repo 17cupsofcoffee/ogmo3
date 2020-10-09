@@ -11,7 +11,6 @@ jobs:
       matrix:
         rust: [stable, beta, nightly]
     steps:
-    steps:
     - name: Install native dependencies for examples
       run: |
         sudo apt-get update
