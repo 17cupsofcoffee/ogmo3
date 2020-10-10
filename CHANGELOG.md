@@ -6,6 +6,12 @@ All breaking changes will be explicitly labelled, to make it easier to assess th
 
 This project adheres to Semantic Versioning.
 
+## Upcoming
+
+### Fixed
+
+* Parsing a `Level` no longer fails if there are no custom values defined for levels in the project.
+
 ## [0.0.2] - 2020-10-07
 
 ### Fixed

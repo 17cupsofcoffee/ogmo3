@@ -50,6 +50,7 @@ pub struct Level {
     pub layers: Vec<Layer>,
 
     /// The level's custom values.
+    #[serde(default)]
     pub values: HashMap<String, Value>,
 }
 
