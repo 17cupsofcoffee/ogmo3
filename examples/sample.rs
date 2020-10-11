@@ -46,18 +46,23 @@ impl GameState {
 
             let mut tiles = Vec::new();
 
-            // TODO: Ogmo allows you to specify seperating pixels between each tile in a
-            // tileset - this example does not currently take those fields into account.
+            let mut y = tileset.tile_separation_y;
 
-            for y in 0..texture.height() / tileset.tile_height {
-                for x in 0..texture.width() / tileset.tile_width {
+            while y + tileset.tile_height <= texture.height() {
+                let mut x = tileset.tile_separation_x;
+
+                while x + tileset.tile_width <= texture.width() {
                     tiles.push(Rectangle {
-                        x: (x * tileset.tile_width) as f32,
-                        y: (y * tileset.tile_height) as f32,
+                        x: x as f32,
+                        y: y as f32,
                         width: tileset.tile_width as f32,
                         height: tileset.tile_height as f32,
                     });
+
+                    x += tileset.tile_width + tileset.tile_separation_x;
                 }
+
+                y += tileset.tile_height + tileset.tile_separation_y;
             }
 
             let id = tilesets.len();
