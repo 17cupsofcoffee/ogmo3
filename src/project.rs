@@ -441,3 +441,38 @@ pub struct Tileset {
     /// The number of empty pixels that seperate each tile on the Y axis in the tileset.
     pub tile_separation_y: i32,
 }
+
+impl Tileset {
+    /// Returns an iterator which yields the position of each tile in the tileset.
+    ///
+    /// As the Ogmo project doesn't store the width and height of the texture (only the
+    /// path to it), you must provide these values yourself.
+    pub fn tile_coords(
+        &self,
+        texture_width: i32,
+        texture_height: i32,
+    ) -> impl Iterator<Item = Vec2<i32>> + '_ {
+        let mut x = self.tile_separation_x;
+        let mut y = self.tile_separation_y;
+
+        std::iter::from_fn(move || {
+            if y + self.tile_height > texture_height {
+                // We've reached the end of the tileset.
+                return None;
+            }
+
+            if x + self.tile_width > texture_width {
+                // We've reached the end of the row, move the cursor
+                // to the beginning of the next line.
+                x = self.tile_separation_x;
+                y += self.tile_height + self.tile_separation_y;
+            }
+
+            let out = Vec2 { x, y };
+
+            x += self.tile_width + self.tile_separation_x;
+
+            Some(out)
+        })
+    }
+}

@@ -8,6 +8,10 @@ This project adheres to Semantic Versioning.
 
 ## Upcoming
 
+### Added 
+
+* `Tileset` now has a method for getting the co-ordinates of each tile in the tileset.
+
 ### Fixed
 
 * Parsing a `Level` no longer fails if there are no custom values defined for levels in the project.

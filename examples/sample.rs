@@ -44,26 +44,17 @@ impl GameState {
         for tileset in project.tilesets {
             let texture = Texture::new(ctx, base_path.join(&tileset.path))?;
 
-            let mut tiles = Vec::new();
-
-            let mut y = tileset.tile_separation_y;
-
-            while y + tileset.tile_height <= texture.height() {
-                let mut x = tileset.tile_separation_x;
-
-                while x + tileset.tile_width <= texture.width() {
-                    tiles.push(Rectangle {
-                        x: x as f32,
-                        y: y as f32,
-                        width: tileset.tile_width as f32,
-                        height: tileset.tile_height as f32,
-                    });
-
-                    x += tileset.tile_width + tileset.tile_separation_x;
-                }
-
-                y += tileset.tile_height + tileset.tile_separation_y;
-            }
+            let tiles = tileset
+                .tile_coords(texture.width(), texture.height())
+                .map(|t| {
+                    Rectangle::new(
+                        t.x as f32,
+                        t.y as f32,
+                        tileset.tile_width as f32,
+                        tileset.tile_height as f32,
+                    )
+                })
+                .collect();
 
             let id = tilesets.len();
             tilesets.push(TilesetData { texture, tiles });
