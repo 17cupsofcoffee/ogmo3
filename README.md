@@ -16,7 +16,7 @@ This crate does _not_ provide a runtime or renderer, but should make it easier t
 
 ```toml
 [dependencies]
-ogmo3 = "0.0.2"
+ogmo3 = "0.0.3"
 ```
 
 ## Usage
