@@ -21,3 +21,4 @@ hashbrown = { version = "0.9", features = ["serde"] }
 
 [dev-dependencies]
 tetra = "0.5"
+anyhow = "1.0"

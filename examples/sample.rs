@@ -25,12 +25,12 @@ struct GameState {
 }
 
 impl GameState {
-    fn new(ctx: &mut Context) -> tetra::Result<GameState> {
+    fn new(ctx: &mut Context) -> anyhow::Result<GameState> {
         // All paths in Ogmo projects and levels are relative to the project folder.
 
         let base_path = PathBuf::from("./examples/sample_project");
-        let project = Project::from_file(base_path.join("test.ogmo")).unwrap();
-        let level = Level::from_file(base_path.join("levels/uno.json")).unwrap();
+        let project = Project::from_file(base_path.join("test.ogmo"))?;
+        let level = Level::from_file(base_path.join("levels/uno.json"))?;
 
         // Most of the project file's data can be ignored at runtime, but it does
         // provide info which can be used to slice up tilesets.
@@ -269,8 +269,8 @@ impl GameState {
     }
 }
 
-impl State for GameState {
-    fn draw(&mut self, ctx: &mut Context) -> tetra::Result {
+impl State<anyhow::Error> for GameState {
+    fn draw(&mut self, ctx: &mut Context) -> anyhow::Result<()> {
         graphics::clear(ctx, Color::WHITE);
 
         for sprite in &self.sprites {
@@ -340,7 +340,7 @@ impl State for GameState {
     }
 }
 
-fn main() -> tetra::Result {
+fn main() -> anyhow::Result<()> {
     ContextBuilder::new("Rendering an Ogmo Project", 640, 480)
         .build()?
         .run(GameState::new)
