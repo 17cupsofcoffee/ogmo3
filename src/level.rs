@@ -325,7 +325,7 @@ pub struct LayerEntityData {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LayerDecalData {
-    /// The entity data.
+    /// The decal data.
     pub decals: Vec<Decal>,
 
     /// The path containing the decal images, relative to the project.
