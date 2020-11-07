@@ -452,27 +452,19 @@ impl Tileset {
         texture_width: i32,
         texture_height: i32,
     ) -> impl Iterator<Item = Vec2<i32>> + '_ {
-        let mut x = self.tile_separation_x;
-        let mut y = self.tile_separation_y;
+        let step_x = self.tile_width + self.tile_separation_x;
+        let step_y = self.tile_height + self.tile_separation_y;
 
-        std::iter::from_fn(move || {
-            if y + self.tile_height > texture_height {
-                // We've reached the end of the tileset.
-                return None;
-            }
+        let tiles_x = texture_width / step_x;
+        let tiles_y = texture_height / step_y;
 
-            if x + self.tile_width > texture_width {
-                // We've reached the end of the row, move the cursor
-                // to the beginning of the next line.
-                x = self.tile_separation_x;
-                y += self.tile_height + self.tile_separation_y;
-            }
+        (0..tiles_y).flat_map(move |tile_y| {
+            (0..tiles_x).map(move |tile_x| {
+                let x = tile_x * step_x;
+                let y = tile_y * step_y;
 
-            let out = Vec2 { x, y };
-
-            x += self.tile_width + self.tile_separation_x;
-
-            Some(out)
+                Vec2 { x, y }
+            })
         })
     }
 }
