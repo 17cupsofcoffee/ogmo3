@@ -226,8 +226,11 @@ pub enum LayerData {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LayerTileData {
-    /// The tile data, stored as a flat list.
-    /// Each value corresponds to an index of a tileset tile (counting left to right, top to bottom).
+    /// The tile data, stored as a flat list of IDs.
+    ///
+    /// Each value corresponds to the ID of a tile in a tileset (with `0` being the
+    /// top left, and moving left to right, top to bottom).
+    ///
     /// Empty tiles are represented by a `-1`.
     pub data: Vec<i32>,
 
@@ -239,8 +242,11 @@ pub struct LayerTileData {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LayerTile2DData {
-    /// The tile data, stored as a 2D list.
-    /// Each value corresponds to an index of a tileset tile (counting left to right, top to bottom).
+    /// The tile data, stored as a 2D list of IDs.
+    ///
+    /// Each value corresponds to the ID of a tile in a tileset (with `0` being the
+    /// top left, and moving left to right, top to bottom).
+    ///
     /// Empty tiles are represented by a `-1`.
     #[serde(rename = "data2D")]
     pub data_2d: Vec<Vec<i32>>,
@@ -253,8 +259,12 @@ pub struct LayerTile2DData {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LayerTileCoordsData {
-    /// The tile data, stored as a flat list.
-    /// Each value corresponds to an X and Y co-ordinate of a tileset tile.
+    /// The tile data, stored as a flat list of tile co-ordinates.
+    ///
+    /// Each value corresponds to the X and Y co-ordinate of a tile in a tileset. The
+    /// values are cell-based, rather than pixel-based - multiply by `grid_cell_width`
+    /// to get the pixel position.
+    ///
     /// Empty tiles are represented by a `[-1]`.
     pub data_coords: Vec<Vec<i32>>,
 
@@ -266,8 +276,12 @@ pub struct LayerTileCoordsData {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LayerTileCoords2DData {
-    /// The tile data, stored as a 2D list.
-    /// Each value corresponds to an X and Y co-ordinate of a tileset tile.
+    /// The tile data, stored as a 2D list of tile co-ordinates.
+    ///
+    /// Each value corresponds to the X and Y co-ordinate of a tile in a tileset. The
+    /// values are cell-based, rather than pixel-based - multiply by `grid_cell_width`
+    /// to get the pixel position.
+    ///
     /// Empty tiles are represented by a `[-1]`.
     #[serde(rename = "dataCoords2D")]
     pub data_coords_2d: Vec<Vec<Vec<i32>>>,
@@ -281,6 +295,9 @@ pub struct LayerTileCoords2DData {
 #[serde(rename_all = "camelCase")]
 pub struct LayerGridData {
     /// The grid data, stored as a flat list.
+    ///
+    /// Each value is an arbitary string - by default, `0` means 'empty', but this is
+    /// customizable in the editor.
     pub grid: Vec<String>,
 }
 
@@ -289,6 +306,9 @@ pub struct LayerGridData {
 #[serde(rename_all = "camelCase")]
 pub struct LayerGrid2DData {
     /// The grid data, stored as a 2D list.
+    ///
+    /// Each value is an arbitary string - by default, `0` means 'empty', but this is
+    /// customizable in the editor.
     #[serde(rename = "grid2D")]
     pub grid_2d: Vec<Vec<String>>,
 }

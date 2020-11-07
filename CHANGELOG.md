@@ -6,6 +6,12 @@ All breaking changes will be explicitly labelled, to make it easier to assess th
 
 This project adheres to Semantic Versioning.
 
+## [Upcoming]
+
+### Changed
+
+* Improved documentation.
+
 ## [0.0.3] - 2020-10-14
 
 ### Added 
