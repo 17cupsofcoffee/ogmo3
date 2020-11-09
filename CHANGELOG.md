@@ -8,8 +8,16 @@ This project adheres to Semantic Versioning.
 
 ## [Upcoming]
 
+### Added 
+
+* `unpack` methods have been added to `TileLayer`, `TileCoordsLayer` and `GridLayer`, which allow for reading tile and grid data without boilerplate.
+* `Layer` and `Value` are now re-exported from the top level of the crate.
+
 ### Changed
 
+* *Breaking:* `Layer`, `ValueTemplate` and `LayerTemplate` are now defined as enums instead of structs containing enums.
+    * This creates some duplication between the different enum variants, but makes it easier to unpack the data. It also simplifies the implementation/usage of the new utility methods.
+* *Breaking*: The different types of grid, tile and tile-coords layers have been replaced with single types with an enum defining the data storage.
 * Improved documentation.
 
 ## [0.0.3] - 2020-10-14

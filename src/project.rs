@@ -86,54 +86,48 @@ impl Project {
 
 /// A template for a value.
 #[derive(Clone, Debug, Deserialize)]
+#[serde(tag = "definition")]
+pub enum ValueTemplate {
+    /// A boolean value template.
+    Boolean(BooleanValueTemplate),
+
+    /// A color value template.
+    Color(ColorValueTemplate),
+
+    /// An enum value template.
+    Enum(EnumValueTemplate),
+
+    /// An integer value template.
+    Integer(IntegerValueTemplate),
+
+    /// A float value template.
+    Float(FloatValueTemplate),
+
+    /// A string value template.
+    String(StringValueTemplate),
+
+    /// A text value template.
+    Text(TextValueTemplate),
+}
+
+/// A boolean value template.
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ValueTemplate {
+pub struct BooleanValueTemplate {
     /// The name of the value.
     pub name: String,
 
-    /// Data specific to certain value template types.
-    #[serde(flatten)]
-    pub data: ValueTemplateData,
-}
-
-/// Data specific to certain value template types.
-#[derive(Clone, Debug, Deserialize)]
-#[serde(tag = "definition")]
-pub enum ValueTemplateData {
-    /// Data specific to boolean value templates.
-    Boolean(ValueTemplateBooleanData),
-
-    /// Data specific to color value templates.
-    Color(ValueTemplateColorData),
-
-    /// Data specific to enum value templates.
-    Enum(ValueTemplateEnumData),
-
-    /// Data specific to integer value templates.
-    Integer(ValueTemplateIntegerData),
-
-    /// Data specific to float value templates.
-    Float(ValueTemplateFloatData),
-
-    /// Data specific to string value templates.
-    String(ValueTemplateStringData),
-
-    /// Data specific to text value templates.
-    Text(ValueTemplateTextData),
-}
-
-/// Data specific to boolean value templates.
-#[derive(Clone, Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ValueTemplateBooleanData {
     /// The default value.
     pub defaults: bool,
 }
 
-/// Data specific to color value templates.
+/// A color value template.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ValueTemplateColorData {
+pub struct ColorValueTemplate {
+    /// The name of the value.
+    pub name: String,
+
     /// The default value.
     pub defaults: String,
 
@@ -141,10 +135,13 @@ pub struct ValueTemplateColorData {
     pub include_alpha: bool,
 }
 
-/// Data specific to enum value templates.
+/// An enum value template.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ValueTemplateEnumData {
+pub struct EnumValueTemplate {
+    /// The name of the value.
+    pub name: String,
+
     /// The default value.
     pub defaults: i32,
 
@@ -152,10 +149,13 @@ pub struct ValueTemplateEnumData {
     pub choices: Vec<String>,
 }
 
-/// Data specific to integer value templates.
+/// An integer value template.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ValueTemplateIntegerData {
+pub struct IntegerValueTemplate {
+    /// The name of the value.
+    pub name: String,
+
     /// The default value.
     pub defaults: i32,
 
@@ -169,10 +169,13 @@ pub struct ValueTemplateIntegerData {
     pub max: i32,
 }
 
-/// Data specific to float value templates.
+/// A float value template.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ValueTemplateFloatData {
+pub struct FloatValueTemplate {
+    /// The name of the value.
+    pub name: String,
+
     /// The default value.
     pub defaults: f32,
 
@@ -186,10 +189,13 @@ pub struct ValueTemplateFloatData {
     pub max: f32,
 }
 
-/// Data specific to string value templates.
+/// A string value template.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ValueTemplateStringData {
+pub struct StringValueTemplate {
+    /// The name of the value.
+    pub name: String,
+
     /// The default value.
     pub defaults: String,
 
@@ -200,18 +206,38 @@ pub struct ValueTemplateStringData {
     pub trim_whitespace: bool,
 }
 
-/// Data specific to text value templates.
+/// A text value template.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ValueTemplateTextData {
+pub struct TextValueTemplate {
+    /// The name of the value.
+    pub name: String,
+
     /// The default value.
     pub defaults: String,
 }
 
 /// A template for a layer.
 #[derive(Clone, Debug, Deserialize)]
+#[serde(untagged)]
+pub enum LayerTemplate {
+    /// A tile layer template.
+    Tile(TileLayerTemplate),
+
+    /// A grid layer template.
+    Grid(GridLayerTemplate),
+
+    /// An entity layer template.
+    Entity(EntityLayerTemplate),
+
+    /// A decal layer template.
+    Decal(DecalLayerTemplate),
+}
+
+/// A tile layer template.
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LayerTemplate {
+pub struct TileLayerTemplate {
     /// The name of the layer.
     pub name: String,
 
@@ -222,32 +248,6 @@ pub struct LayerTemplate {
     #[serde(rename = "exportID")]
     pub export_id: String,
 
-    /// Data specific to certain layer template types.
-    #[serde(flatten)]
-    pub data: LayerTemplateData,
-}
-
-/// Data specific to certain layer template types.
-#[derive(Clone, Debug, Deserialize)]
-#[serde(untagged)]
-pub enum LayerTemplateData {
-    /// Data specific to tile layer templates.
-    Tile(LayerTemplateTileData),
-
-    /// Data specific to grid layer templates.
-    Grid(LayerTemplateGridData),
-
-    /// Data specific to entity layer templates.
-    Entity(LayerTemplateEntityData),
-
-    /// Data specific to decal layer templates.
-    Decal(LayerTemplateDecalData),
-}
-
-/// Data specific to tile layer templates.
-#[derive(Clone, Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LayerTemplateTileData {
     /// Whether the tile data is stored as IDs or co-oords.
     pub export_mode: ExportMode,
 
@@ -258,10 +258,20 @@ pub struct LayerTemplateTileData {
     pub default_tileset: String,
 }
 
-/// Data specific to grid layer templates.
+/// A grid layer template.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LayerTemplateGridData {
+pub struct GridLayerTemplate {
+    /// The name of the layer.
+    pub name: String,
+
+    /// The size of each cell in the layer's grid.
+    pub grid_size: Vec2<i32>,
+
+    /// The unique export ID of the layer.
+    #[serde(rename = "exportID")]
+    pub export_id: String,
+
     /// Whether the tile data is stored as a 1D array or a 2D array.
     pub array_mode: ArrayMode,
 
@@ -269,10 +279,20 @@ pub struct LayerTemplateGridData {
     pub legend: HashMap<String, String>,
 }
 
-/// Data specific to entity layer templates.
+/// An entity layer template.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LayerTemplateEntityData {
+pub struct EntityLayerTemplate {
+    /// The name of the layer.
+    pub name: String,
+
+    /// The size of each cell in the layer's grid.
+    pub grid_size: Vec2<i32>,
+
+    /// The unique export ID of the layer.
+    #[serde(rename = "exportID")]
+    pub export_id: String,
+
     /// Tags that are required for an entity to be displayed on this layer.
     pub required_tags: Vec<String>,
 
@@ -280,10 +300,20 @@ pub struct LayerTemplateEntityData {
     pub excluded_tags: Vec<String>,
 }
 
-/// Data specific to decal layer templates.
+/// A decal layer template.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LayerTemplateDecalData {
+pub struct DecalLayerTemplate {
+    /// The name of the layer.
+    pub name: String,
+
+    /// The size of each cell in the layer's grid.
+    pub grid_size: Vec2<i32>,
+
+    /// The unique export ID of the layer.
+    #[serde(rename = "exportID")]
+    pub export_id: String,
+
     /// The path to search for decal images, relative to the project
     pub folder: PathBuf,
 

@@ -11,8 +11,7 @@
 use std::path::PathBuf;
 
 use hashbrown::HashMap;
-use ogmo3::level::LayerData;
-use ogmo3::{Level, Project};
+use ogmo3::{Layer, Level, Project};
 use tetra::graphics::{self, Color, DrawParams, Rectangle, Texture};
 use tetra::math::Vec2;
 use tetra::{Context, ContextBuilder, State};
@@ -76,116 +75,54 @@ impl GameState {
         // chunked levels - this example does not currently take those fields into account.
 
         for layer in level.layers {
-            match layer.data {
-                LayerData::Tile(data) => {
-                    // In tile layers, each tile is represented by a number. This can be used as an
-                    // index into our sliced tileset from earlier.
-                    //
-                    // If the value is -1, it means the tile is empty.
-
-                    for (i, &t) in data.data.iter().enumerate() {
-                        if t > -1 {
-                            let px = (i as i32 % layer.grid_cells_x) * layer.grid_cell_width;
-                            let py = (i as i32 / layer.grid_cells_x) * layer.grid_cell_height;
-
+            match layer {
+                // Ogmo's tile data can be quite involved to unpack, and there are multiple different
+                // storage options available in the editor. The `unpack` method abstracts over these,
+                // allowing you to quickly pull tile data out of the layer.
+                Layer::Tile(layer) => {
+                    for tile in layer.unpack() {
+                        if let Some(id) = tile.id {
                             sprites.push(Sprite::TileIndex {
-                                tileset: tileset_mappings[&data.tileset],
-                                tile: t as usize,
-                                position: Vec2::new(px as f32, py as f32),
+                                tileset: tileset_mappings[&layer.tileset],
+                                tile: id as usize,
+                                position: Vec2::new(
+                                    tile.pixel_position.x as f32,
+                                    tile.pixel_position.y as f32,
+                                ),
                             });
                         }
                     }
                 }
 
-                LayerData::Tile2D(data) => {
-                    // 2D tile layers use the same kind of values as 1D tile layers - see above.
-
-                    for (y, row) in data.data_2d.iter().enumerate() {
-                        for (x, &t) in row.iter().enumerate() {
-                            if t > -1 {
-                                let px = x as i32 * layer.grid_cell_width;
-                                let py = y as i32 * layer.grid_cell_height;
-
-                                sprites.push(Sprite::TileIndex {
-                                    tileset: tileset_mappings[&data.tileset],
-                                    tile: t as usize,
-                                    position: Vec2::new(px as f32, py as f32),
-                                });
-                            }
-                        }
-                    }
-                }
-
-                LayerData::TileCoords(data) => {
-                    // In tile co-ord layers, each tile is represented by a two-element array,
-                    // which contains the co-ordinates of the tile in the tileset.
-                    //
-                    // If the value is [-1], it means the tile is empty.
-
-                    for (i, coords) in data.data_coords.iter().enumerate() {
-                        if coords[0] > -1 {
-                            let px = (i as i32 % layer.grid_cells_x) * layer.grid_cell_width;
-                            let py = (i as i32 / layer.grid_cells_x) * layer.grid_cell_height;
-                            let pu = coords[0] * layer.grid_cell_width;
-                            let pv = coords[1] * layer.grid_cell_height;
-
+                // An `unpack` method is also available for layers defined using tile co-ordinates.
+                Layer::TileCoords(layer) => {
+                    for tile in layer.unpack() {
+                        if let Some(coords) = tile.pixel_coords {
                             sprites.push(Sprite::TileUV {
-                                tileset: tileset_mappings[&data.tileset],
+                                tileset: tileset_mappings[&layer.tileset],
                                 uv: Rectangle::new(
-                                    pu as f32,
-                                    pv as f32,
+                                    coords.x as f32,
+                                    coords.y as f32,
                                     layer.grid_cell_width as f32,
                                     layer.grid_cell_height as f32,
                                 ),
-                                position: Vec2::new(px as f32, py as f32),
+                                position: Vec2::new(
+                                    tile.pixel_position.x as f32,
+                                    tile.pixel_position.y as f32,
+                                ),
                             });
                         }
                     }
                 }
 
-                LayerData::TileCoords2D(data) => {
-                    // 2D tile co-ord layers use the same kind of values as 1D tile co-ord
-                    // layers - see above.
-
-                    for (y, row) in data.data_coords_2d.iter().enumerate() {
-                        for (x, coords) in row.iter().enumerate() {
-                            if coords[0] > -1 {
-                                let px = x as i32 * layer.grid_cell_width;
-                                let py = y as i32 * layer.grid_cell_height;
-                                let pu = coords[0] * layer.grid_cell_width;
-                                let pv = coords[1] * layer.grid_cell_height;
-
-                                sprites.push(Sprite::TileUV {
-                                    tileset: tileset_mappings[&data.tileset],
-                                    uv: Rectangle::new(
-                                        pu as f32,
-                                        pv as f32,
-                                        layer.grid_cell_width as f32,
-                                        layer.grid_cell_height as f32,
-                                    ),
-                                    position: Vec2::new(px as f32, py as f32),
-                                });
-                            }
-                        }
-                    }
-                }
-
-                LayerData::Grid(data) => {
-                    // In grid layers, each cell contains a string, chosen from a set of values
-                    // defined in the layer config.
-                    //
-                    // By default, "0" is used as the empty value, but this can be changed in
-                    // the editor per-layer.
-
-                    for (i, v) in data.grid.iter().enumerate() {
-                        if v != "0" {
-                            let px = (i as i32 % layer.grid_cells_x) * layer.grid_cell_width;
-                            let py = (i as i32 / layer.grid_cells_x) * layer.grid_cell_height;
-
+                // An `unpack` method is also available for grid data.
+                Layer::Grid(layer) => {
+                    for cell in layer.unpack() {
+                        if cell.value != "0" {
                             sprites.push(Sprite::Rect {
                                 rect: Rectangle::new(
-                                    px as f32,
-                                    py as f32,
+                                    cell.pixel_position.x as f32,
+                                    cell.pixel_position.y as f32,
                                     layer.grid_cell_width as f32,
                                     layer.grid_cell_height as f32,
                                 ),
@@ -195,35 +132,11 @@ impl GameState {
                     }
                 }
 
-                LayerData::Grid2D(data) => {
-                    // 2D grid layers use the same kind of values as 1D grid layers - see above.
-
-                    for (y, row) in data.grid_2d.iter().enumerate() {
-                        for (x, v) in row.iter().enumerate() {
-                            if v != "0" {
-                                let px = x as i32 * layer.grid_cell_width;
-                                let py = y as i32 * layer.grid_cell_height;
-
-                                sprites.push(Sprite::Rect {
-                                    rect: Rectangle::new(
-                                        px as f32,
-                                        py as f32,
-                                        layer.grid_cell_width as f32,
-                                        layer.grid_cell_height as f32,
-                                    ),
-                                    color: Color::BLACK,
-                                });
-                            }
-                        }
-                    }
-                }
-
-                LayerData::Entity(data) => {
-                    // In a real game, you would probably not want to draw entity data directly like
-                    // this - instead, you would use them to spawn game entities at the specified
-                    // location.
-
-                    for entity in &data.entities {
+                // In a real game, you would probably not want to draw entity data directly like
+                // this - instead, you would use them to spawn game entities at the specified
+                // location.
+                Layer::Entity(layer) => {
+                    for entity in &layer.entities {
                         sprites.push(Sprite::Rect {
                             color: Color::RED,
                             rect: Rectangle::new(entity.x, entity.y, 16.0, 16.0),
@@ -231,17 +144,16 @@ impl GameState {
                     }
                 }
 
-                LayerData::Decal(data) => {
-                    // Decal data is stored as a path (relative to the layer's defined folder) and
-                    // positioning data.
-                    //
-                    // In this example, we load a seperate texture for every decal - in a real game,
-                    // you would probably want to make sure you don't load the same texture multiple
-                    // times!
+                // Decal data is stored as a path (relative to the layer's defined folder) and
+                // positioning data.
+                //
+                // In this example, we load a seperate texture for every decal - in a real game,
+                // you would probably want to make sure you don't load the same texture multiple
+                // times!
+                Layer::Decal(layer) => {
+                    let folder_path = base_path.join(layer.folder);
 
-                    let folder_path = base_path.join(data.folder);
-
-                    for decal in data.decals {
+                    for decal in layer.decals {
                         let texture = Texture::new(ctx, folder_path.join(decal.texture))?;
                         let id = decals.len();
 

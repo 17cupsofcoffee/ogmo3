@@ -3,6 +3,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use either::Either;
 use hashbrown::HashMap;
 use serde::Deserialize;
 
@@ -161,8 +162,28 @@ pub struct Decal {
 
 /// A layer instance.
 #[derive(Clone, Debug, Deserialize)]
+#[serde(untagged)]
+pub enum Layer {
+    /// A tile layer.
+    Tile(TileLayer),
+
+    /// A tile co-ords layer.
+    TileCoords(TileCoordsLayer),
+
+    /// A grid layer.
+    Grid(GridLayer),
+
+    /// An entity layer.
+    Entity(EntityLayer),
+
+    /// A decal layer.
+    Decal(DecalLayer),
+}
+
+/// A tile layer.
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Layer {
+pub struct TileLayer {
     /// The name of the layer.
     pub name: String,
 
@@ -188,95 +209,280 @@ pub struct Layer {
     /// The number of grid cells on the Y axis.
     pub grid_cells_y: i32,
 
-    /// Data specific to certain layer types.
+    /// The tile data.
+    ///
+    /// You may want to use the `unpack` method rather than accessing this directly.
     #[serde(flatten)]
-    pub data: LayerData,
-}
-
-/// Data specific to certain layer types.
-#[derive(Clone, Debug, Deserialize)]
-#[serde(untagged)]
-pub enum LayerData {
-    /// Data specific to tile layers with 1D storage.
-    Tile(LayerTileData),
-
-    /// Data specific to tile layers with 2D storage.
-    Tile2D(LayerTile2DData),
-
-    /// Data specific to tile co-ord layers with 1D storage.
-    TileCoords(LayerTileCoordsData),
-
-    /// Data specific to tile co-ord layers with 2D storage.
-    TileCoords2D(LayerTileCoords2DData),
-
-    /// Data specific to grid layers with 1D storage.
-    Grid(LayerGridData),
-
-    /// Data specific to grid layers with 2D storage.
-    Grid2D(LayerGrid2DData),
-
-    /// Data specific to entity layers.
-    Entity(LayerEntityData),
-
-    /// Data specific to decal layers.
-    Decal(LayerDecalData),
-}
-
-/// Data specific to tile layers with 1D storage.
-#[derive(Clone, Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LayerTileData {
-    /// The tile data, stored as a flat list of IDs.
-    ///
-    /// Each value corresponds to the ID of a tile in a tileset (with `0` being the
-    /// top left, and moving left to right, top to bottom).
-    ///
-    /// Empty tiles are represented by a `-1`.
-    pub data: Vec<i32>,
+    pub data: TileLayerStorage,
 
     /// The name of the tileset used for this layer.
     pub tileset: String,
 }
 
-/// Data specific to tile layers with 2D storage.
+impl TileLayer {
+    /// Unpack the tile data from the layer.
+    pub fn unpack(&self) -> impl Iterator<Item = Tile> + '_ {
+        match &self.data {
+            TileLayerStorage::Data(data) => {
+                Either::Left(data.iter().enumerate().map(move |(i, &v)| {
+                    let grid_x = i as i32 % self.grid_cells_x;
+                    let grid_y = i as i32 / self.grid_cells_x;
+
+                    let pixel_x = grid_x * self.grid_cell_width;
+                    let pixel_y = grid_y * self.grid_cell_height;
+
+                    let id = if v == -1 { None } else { Some(v) };
+
+                    Tile {
+                        id,
+                        grid_position: Vec2 {
+                            x: grid_x,
+                            y: grid_y,
+                        },
+                        pixel_position: Vec2 {
+                            x: pixel_x,
+                            y: pixel_y,
+                        },
+                    }
+                }))
+            }
+
+            TileLayerStorage::Data2D(data) => {
+                Either::Right(data.iter().enumerate().flat_map(move |(y, row)| {
+                    row.iter().enumerate().map(move |(x, &v)| {
+                        let grid_x = x as i32;
+                        let grid_y = y as i32;
+
+                        let pixel_x = grid_x * self.grid_cell_width;
+                        let pixel_y = grid_y * self.grid_cell_height;
+
+                        let id = if v == -1 { None } else { Some(v) };
+
+                        Tile {
+                            id,
+                            grid_position: Vec2 {
+                                x: grid_x,
+                                y: grid_y,
+                            },
+                            pixel_position: Vec2 {
+                                x: pixel_x,
+                                y: pixel_y,
+                            },
+                        }
+                    })
+                }))
+            }
+        }
+    }
+}
+
+/// An individual tile, unpacked from a `TileLayer`.
+#[derive(Copy, Clone, Debug)]
+pub struct Tile {
+    /// The ID of the tile in the tileset.
+    ///
+    /// If the tile is empty, this will be `None`.
+    pub id: Option<i32>,
+
+    /// The position of the tile in grid co-ordinates.
+    pub grid_position: Vec2<i32>,
+
+    /// The position of the tile in pixel co-ordinates.
+    pub pixel_position: Vec2<i32>,
+}
+
+/// Tile data from a `TileLayer`.
 #[derive(Clone, Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LayerTile2DData {
-    /// The tile data, stored as a 2D list of IDs.
+pub enum TileLayerStorage {
+    /// A flat list of tile IDs.
+    ///
+    /// Each value corresponds to the ID of a tile in a tileset (with `0` being the
+    /// top left, and moving left to right, top to bottom).
+    ///
+    /// Empty tiles are represented by a `-1`.
+    #[serde(rename = "data")]
+    Data(Vec<i32>),
+
+    /// A 2D list of tile IDs.
     ///
     /// Each value corresponds to the ID of a tile in a tileset (with `0` being the
     /// top left, and moving left to right, top to bottom).
     ///
     /// Empty tiles are represented by a `-1`.
     #[serde(rename = "data2D")]
-    pub data_2d: Vec<Vec<i32>>,
+    Data2D(Vec<Vec<i32>>),
+}
+
+/// A tile co-ords layer.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TileCoordsLayer {
+    /// The name of the layer.
+    pub name: String,
+
+    /// The unique export ID of the entity.
+    #[serde(rename = "_eid")]
+    pub export_id: String,
+
+    /// The layer's offset on the X axis.
+    pub offset_x: f32,
+
+    /// The layer's offset on the Y axis.
+    pub offset_y: f32,
+
+    /// The width of the layer's grid cells.
+    pub grid_cell_width: i32,
+
+    /// The height of the layer's grid cells.
+    pub grid_cell_height: i32,
+
+    /// The number of grid cells on the X axis.
+    pub grid_cells_x: i32,
+
+    /// The number of grid cells on the Y axis.
+    pub grid_cells_y: i32,
+
+    /// The tile data.
+    ///
+    /// You may want to use the `unpack` method rather than accessing this directly.
+    #[serde(flatten)]
+    pub data: TileCoordsLayerStorage,
 
     /// The name of the tileset used for this layer.
     pub tileset: String,
 }
 
-/// Data specific to tile co-ord layers with 1D storage.
+impl TileCoordsLayer {
+    /// Unpack the tile data from the layer.
+    pub fn unpack(&self) -> impl Iterator<Item = TileCoords> + '_ {
+        match &self.data {
+            TileCoordsLayerStorage::DataCoords(data) => {
+                Either::Left(data.iter().enumerate().map(move |(i, coords)| {
+                    let grid_x = i as i32 % self.grid_cells_x;
+                    let grid_y = i as i32 / self.grid_cells_x;
+
+                    let pixel_x = grid_x * self.grid_cell_width;
+                    let pixel_y = grid_y * self.grid_cell_height;
+
+                    let (grid_coords, pixel_coords) = if coords[0] == -1 {
+                        (None, None)
+                    } else {
+                        let grid_u = coords[0];
+                        let grid_v = coords[1];
+
+                        let pixel_u = grid_u * self.grid_cell_width;
+                        let pixel_v = grid_v * self.grid_cell_height;
+
+                        (
+                            Some(Vec2 {
+                                x: grid_u,
+                                y: grid_v,
+                            }),
+                            Some(Vec2 {
+                                x: pixel_u,
+                                y: pixel_v,
+                            }),
+                        )
+                    };
+
+                    TileCoords {
+                        grid_coords,
+                        pixel_coords,
+                        grid_position: Vec2 {
+                            x: grid_x,
+                            y: grid_y,
+                        },
+                        pixel_position: Vec2 {
+                            x: pixel_x,
+                            y: pixel_y,
+                        },
+                    }
+                }))
+            }
+
+            TileCoordsLayerStorage::DataCoords2D(data) => {
+                Either::Right(data.iter().enumerate().flat_map(move |(y, row)| {
+                    row.iter().enumerate().map(move |(x, coords)| {
+                        let grid_x = x as i32;
+                        let grid_y = y as i32;
+
+                        let pixel_x = grid_x * self.grid_cell_width;
+                        let pixel_y = grid_y * self.grid_cell_height;
+
+                        let (grid_coords, pixel_coords) = if coords[0] == -1 {
+                            (None, None)
+                        } else {
+                            let grid_u = coords[0];
+                            let grid_v = coords[1];
+
+                            let pixel_u = grid_u * self.grid_cell_width;
+                            let pixel_v = grid_v * self.grid_cell_height;
+
+                            (
+                                Some(Vec2 {
+                                    x: grid_u,
+                                    y: grid_v,
+                                }),
+                                Some(Vec2 {
+                                    x: pixel_u,
+                                    y: pixel_v,
+                                }),
+                            )
+                        };
+
+                        TileCoords {
+                            grid_coords,
+                            pixel_coords,
+                            grid_position: Vec2 {
+                                x: grid_x,
+                                y: grid_y,
+                            },
+                            pixel_position: Vec2 {
+                                x: pixel_x,
+                                y: pixel_y,
+                            },
+                        }
+                    })
+                }))
+            }
+        }
+    }
+}
+
+/// An individual tile, unpacked from a `TileCoordsLayer`.
+#[derive(Copy, Clone, Debug)]
+pub struct TileCoords {
+    /// The position of the tile in the tileset, in grid co-ordinates.
+    ///
+    /// If the tile is empty, this will be `None`.
+    pub grid_coords: Option<Vec2<i32>>,
+
+    /// The position of the tile in the tileset, in pixel co-ordinates.
+    ///
+    /// If the tile is empty, this will be `None`.
+    pub pixel_coords: Option<Vec2<i32>>,
+
+    /// The position of the tile in grid co-ordinates.
+    pub grid_position: Vec2<i32>,
+
+    /// The position of the tile in pixel co-ordinates.
+    pub pixel_position: Vec2<i32>,
+}
+
+/// Tile  data from a `TileCoordsLayer`.
 #[derive(Clone, Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LayerTileCoordsData {
-    /// The tile data, stored as a flat list of tile co-ordinates.
+pub enum TileCoordsLayerStorage {
+    /// A flat list of tile co-ords.
     ///
     /// Each value corresponds to the X and Y co-ordinate of a tile in a tileset. The
     /// values are cell-based, rather than pixel-based - multiply by `grid_cell_width`
     /// to get the pixel position.
     ///
     /// Empty tiles are represented by a `[-1]`.
-    pub data_coords: Vec<Vec<i32>>,
+    #[serde(rename = "dataCoords")]
+    DataCoords(Vec<Vec<i32>>),
 
-    /// The name of the tileset used for this layer.
-    pub tileset: String,
-}
-
-/// Data specific to tile co-ord layers with 2D storage.
-#[derive(Clone, Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LayerTileCoords2DData {
-    /// The tile data, stored as a 2D list of tile co-ordinates.
+    /// A 2D list of tile co-ords.
     ///
     /// Each value corresponds to the X and Y co-ordinate of a tile in a tileset. The
     /// values are cell-based, rather than pixel-based - multiply by `grid_cell_width`
@@ -284,48 +490,192 @@ pub struct LayerTileCoords2DData {
     ///
     /// Empty tiles are represented by a `[-1]`.
     #[serde(rename = "dataCoords2D")]
-    pub data_coords_2d: Vec<Vec<Vec<i32>>>,
-
-    /// The name of the tileset used for this layer.
-    pub tileset: String,
+    DataCoords2D(Vec<Vec<Vec<i32>>>),
 }
 
-/// Data specific to grid layers with 1D storage.
+/// A grid layer.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LayerGridData {
-    /// The grid data, stored as a flat list.
+pub struct GridLayer {
+    /// The name of the layer.
+    pub name: String,
+
+    /// The unique export ID of the entity.
+    #[serde(rename = "_eid")]
+    pub export_id: String,
+
+    /// The layer's offset on the X axis.
+    pub offset_x: f32,
+
+    /// The layer's offset on the Y axis.
+    pub offset_y: f32,
+
+    /// The width of the layer's grid cells.
+    pub grid_cell_width: i32,
+
+    /// The height of the layer's grid cells.
+    pub grid_cell_height: i32,
+
+    /// The number of grid cells on the X axis.
+    pub grid_cells_x: i32,
+
+    /// The number of grid cells on the Y axis.
+    pub grid_cells_y: i32,
+
+    /// The grid data.
     ///
-    /// Each value is an arbitary string - by default, `0` means 'empty', but this is
-    /// customizable in the editor.
-    pub grid: Vec<String>,
+    /// You may want to use the `unpack` method rather than accessing this directly.
+    #[serde(flatten)]
+    pub data: GridLayerStorage,
 }
 
-/// Data specific to grid layers with 2D storage.
+/// Grid data from a `GridLayer`.
 #[derive(Clone, Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LayerGrid2DData {
-    /// The grid data, stored as a 2D list.
+pub enum GridLayerStorage {
+    /// A flat list of string data.
     ///
-    /// Each value is an arbitary string - by default, `0` means 'empty', but this is
-    /// customizable in the editor.
+    /// By default, `"0"` means 'empty', but this is customizable in the editor.
+    #[serde(rename = "grid")]
+    Grid(Vec<String>),
+
+    /// A 2D list of string data.
+    ///
+    /// By default, `"0"` means 'empty', but this is customizable in the editor.
     #[serde(rename = "grid2D")]
-    pub grid_2d: Vec<Vec<String>>,
+    Grid2D(Vec<Vec<String>>),
 }
 
-/// Data specific to entity layers.
+/// An individual grid cell, unpacked from a `GridLayer`.
+#[derive(Copy, Clone, Debug)]
+pub struct GridCell<'a> {
+    /// The value of the grid cell.
+    ///
+    /// By default, `"0"` means 'empty', but this is customizable in the editor.
+    pub value: &'a str,
+
+    /// The position of the cell in grid co-ordinates.
+    pub grid_position: Vec2<i32>,
+
+    /// The position of the cell in pixel co-ordinates.
+    pub pixel_position: Vec2<i32>,
+}
+
+impl GridLayer {
+    /// Unpack the grid data from the layer.
+    pub fn unpack(&self) -> impl Iterator<Item = GridCell<'_>> + '_ {
+        match &self.data {
+            GridLayerStorage::Grid(data) => {
+                Either::Left(data.iter().enumerate().map(move |(i, value)| {
+                    let grid_x = i as i32 % self.grid_cells_x;
+                    let grid_y = i as i32 / self.grid_cells_x;
+
+                    let pixel_x = grid_x * self.grid_cell_width;
+                    let pixel_y = grid_y * self.grid_cell_height;
+
+                    GridCell {
+                        value,
+                        grid_position: Vec2 {
+                            x: grid_x,
+                            y: grid_y,
+                        },
+                        pixel_position: Vec2 {
+                            x: pixel_x,
+                            y: pixel_y,
+                        },
+                    }
+                }))
+            }
+
+            GridLayerStorage::Grid2D(data) => {
+                Either::Right(data.iter().enumerate().flat_map(move |(y, row)| {
+                    row.iter().enumerate().map(move |(x, value)| {
+                        let grid_x = x as i32;
+                        let grid_y = y as i32;
+
+                        let pixel_x = grid_x * self.grid_cell_width;
+                        let pixel_y = grid_y * self.grid_cell_height;
+
+                        GridCell {
+                            value,
+                            grid_position: Vec2 {
+                                x: grid_x,
+                                y: grid_y,
+                            },
+                            pixel_position: Vec2 {
+                                x: pixel_x,
+                                y: pixel_y,
+                            },
+                        }
+                    })
+                }))
+            }
+        }
+    }
+}
+
+/// An entity layer.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LayerEntityData {
-    /// The entity data.
+pub struct EntityLayer {
+    /// The name of the layer.
+    pub name: String,
+
+    /// The unique export ID of the entity.
+    #[serde(rename = "_eid")]
+    pub export_id: String,
+
+    /// The layer's offset on the X axis.
+    pub offset_x: f32,
+
+    /// The layer's offset on the Y axis.
+    pub offset_y: f32,
+
+    /// The width of the layer's grid cells.
+    pub grid_cell_width: i32,
+
+    /// The height of the layer's grid cells.
+    pub grid_cell_height: i32,
+
+    /// The number of grid cells on the X axis.
+    pub grid_cells_x: i32,
+
+    /// The number of grid cells on the Y axis.
+    pub grid_cells_y: i32,
+
+    /// Entity data.
     pub entities: Vec<Entity>,
 }
 
-/// Data specific to decal layers.
+/// A decal layer.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LayerDecalData {
-    /// The decal data.
+pub struct DecalLayer {
+    /// The name of the layer.
+    pub name: String,
+
+    /// The unique export ID of the entity.
+    #[serde(rename = "_eid")]
+    pub export_id: String,
+
+    /// The layer's offset on the X axis.
+    pub offset_x: f32,
+
+    /// The layer's offset on the Y axis.
+    pub offset_y: f32,
+
+    /// The width of the layer's grid cells.
+    pub grid_cell_width: i32,
+
+    /// The height of the layer's grid cells.
+    pub grid_cell_height: i32,
+
+    /// The number of grid cells on the X axis.
+    pub grid_cells_x: i32,
+
+    /// The number of grid cells on the Y axis.
+    pub grid_cells_y: i32,
+
+    /// Decal data.
     pub decals: Vec<Decal>,
 
     /// The path containing the decal images, relative to the project.

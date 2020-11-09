@@ -11,7 +11,7 @@ use std::io;
 
 use serde::Deserialize;
 
-pub use level::Level;
+pub use level::{Layer, Level, Value};
 pub use project::Project;
 
 /// The various kinds of errors that can occur while parsing Ogmo data.

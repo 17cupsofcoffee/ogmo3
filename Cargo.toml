@@ -18,6 +18,7 @@ serde = { version = "1.0.116", features = ["derive"] }
 serde_json = "1.0.58"
 serde_repr = "0.1"
 hashbrown = { version = "0.9", features = ["serde"] }
+either = "1.6.1"
 
 [dev-dependencies]
 tetra = "0.5"
