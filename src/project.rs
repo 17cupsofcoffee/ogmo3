@@ -110,6 +110,21 @@ pub enum ValueTemplate {
     Text(TextValueTemplate),
 }
 
+impl ValueTemplate {
+    /// Gets the name of the value template.
+    pub fn name(&self) -> &str {
+        match self {
+            ValueTemplate::Boolean(data) => &data.name,
+            ValueTemplate::Color(data) => &data.name,
+            ValueTemplate::Enum(data) => &data.name,
+            ValueTemplate::Integer(data) => &data.name,
+            ValueTemplate::Float(data) => &data.name,
+            ValueTemplate::String(data) => &data.name,
+            ValueTemplate::Text(data) => &data.name,
+        }
+    }
+}
+
 /// A boolean value template.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -232,6 +247,18 @@ pub enum LayerTemplate {
 
     /// A decal layer template.
     Decal(DecalLayerTemplate),
+}
+
+impl LayerTemplate {
+    /// Gets the name of the layer template.
+    pub fn name(&self) -> &str {
+        match self {
+            LayerTemplate::Tile(data) => &data.name,
+            LayerTemplate::Grid(data) => &data.name,
+            LayerTemplate::Entity(data) => &data.name,
+            LayerTemplate::Decal(data) => &data.name,
+        }
+    }
 }
 
 /// A tile layer template.

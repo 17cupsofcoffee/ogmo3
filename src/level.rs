@@ -180,6 +180,19 @@ pub enum Layer {
     Decal(DecalLayer),
 }
 
+impl Layer {
+    /// Gets the name of the layer.
+    pub fn name(&self) -> &str {
+        match self {
+            Layer::Tile(data) => &data.name,
+            Layer::TileCoords(data) => &data.name,
+            Layer::Grid(data) => &data.name,
+            Layer::Entity(data) => &data.name,
+            Layer::Decal(data) => &data.name,
+        }
+    }
+}
+
 /// A tile layer.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

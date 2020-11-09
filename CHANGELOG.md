@@ -6,6 +6,12 @@ All breaking changes will be explicitly labelled, to make it easier to assess th
 
 This project adheres to Semantic Versioning.
 
+## [Upcoming]
+
+### Added
+
+* Added `name` getters to various structs.
+
 ## [0.0.4] - 2020-11-09
 
 ### Added 
