@@ -24,3 +24,7 @@ either = "1.6.1"
 tetra = "0.5"
 anyhow = "1.0"
 pretty_assertions = "0.6.1"
+
+# This is required to make pretty_assertions run at a reasonable speed:
+[profile.dev.package.difference]
+opt-level = 3

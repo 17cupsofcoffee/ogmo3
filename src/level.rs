@@ -5,7 +5,8 @@ use std::path::{Path, PathBuf};
 
 use either::Either;
 use hashbrown::HashMap;
-use serde::Deserialize;
+use serde::ser::SerializeStruct;
+use serde::{Deserialize, Serialize, Serializer};
 
 use crate::{Error, Vec2};
 
@@ -14,7 +15,7 @@ use crate::{Error, Vec2};
 /// As Ogmo's level format does not store the type alongside the value,
 /// it is not possible for this enum to specify the exact type of the
 /// original value template.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum Value {
     /// A boolean value.
@@ -32,9 +33,12 @@ pub enum Value {
 }
 
 /// An Ogmo level.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Level {
+    /// The version of Ogmo used to export this level.
+    pub ogmo_version: String,
+
     /// The width of the level.
     pub width: f32,
 
@@ -47,12 +51,12 @@ pub struct Level {
     /// The offset of the level on the Y axis. Useful for loading multiple chunked levels.
     pub offset_y: f32,
 
-    /// The layers that make up the level.
-    pub layers: Vec<Layer>,
-
     /// The level's custom values.
     #[serde(default)]
     pub values: HashMap<String, Value>,
+
+    /// The layers that make up the level.
+    pub layers: Vec<Layer>,
 }
 
 impl Level {
@@ -75,10 +79,28 @@ impl Level {
         let json = fs::read_to_string(path).map_err(Error::Io)?;
         Level::from_json(&json)
     }
+
+    /// Writes the Ogmo level to a JSON string.
+    ///
+    /// # Errors
+    ///
+    /// * `Error::Json` will be returned if serialization fails.
+    pub fn to_json(&self) -> Result<String, Error> {
+        serde_json::to_string(self).map_err(Error::Json)
+    }
+
+    /// Writes the Ogmo level to a pretty-printed JSON string.
+    ///
+    /// # Errors
+    ///
+    /// * `Error::Json` will be returned if serialization fails.
+    pub fn to_json_pretty(&self) -> Result<String, Error> {
+        serde_json::to_string_pretty(self).map_err(Error::Json)
+    }
 }
 
 /// An entity instance.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Entity {
     /// The entity's name.
@@ -99,43 +121,52 @@ pub struct Entity {
 
     /// The width of the entity.
     /// Will only be present if the entity template was defined as resizable.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub width: Option<f32>,
 
     /// The width of the entity.
     /// Will only be present if the entity template was defined as resizable.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub height: Option<f32>,
 
     /// The X origin of the entity.
     /// Will only be present if the entity template defined an origin.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub origin_x: Option<f32>,
 
     /// The Y origin of the entity.
     /// Will only be present if the entity template defined an origin.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub origin_y: Option<f32>,
 
     /// The rotation of the entity.
     /// Will only be present if the entity template was defined as rotatable.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub rotation: Option<f32>,
 
     /// Whether the entity is flipped on the X axis.
     /// Will only be present if the entity template was defined as X-flippable.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub flipped_x: Option<bool>,
 
     /// Whether the entity is flipped on the Y axis.
     /// Will only be present if the entity template was defined as Y-flippable.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub flipped_y: Option<bool>,
 
     /// The entity's nodes.
     /// Will only be present if the entity template was defined as having nodes.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub nodes: Option<Vec<Vec2<f32>>>,
 
     /// The entity's custom values.
     /// Will only be present if the entity template was defined as having custom values.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub values: Option<HashMap<String, Value>>,
 }
 
 /// A decal instance.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Decal {
     /// The X position of the decal.
@@ -144,24 +175,30 @@ pub struct Decal {
     /// The Y position of the decal.
     pub y: f32,
 
-    /// The name of the decal's texture.
-    pub texture: String,
-
-    /// The rotation of the decal.
-    /// Will only be present if the decal template was defined as rotatable.
-    pub rotation: Option<f32>,
-
     /// The scale of the decal on the X axis.
     /// Will only be present if the decal template was defined as scalable.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub scale_x: Option<f32>,
 
     /// The scale of the decal on the Y axis.
     /// Will only be present if the decal template was defined as scalable.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub scale_y: Option<f32>,
+
+    /// The rotation of the decal.
+    /// Will only be present if the decal template was defined as rotatable.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rotation: Option<f32>,
+
+    /// The name of the decal's texture.
+    pub texture: String,
+
+    /// Custom values associated with the decal.
+    pub values: HashMap<String, Value>,
 }
 
 /// A layer instance.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum Layer {
     /// A tile layer.
@@ -194,7 +231,7 @@ impl Layer {
 }
 
 /// A tile layer.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TileLayer {
     /// The name of the layer.
@@ -222,14 +259,14 @@ pub struct TileLayer {
     /// The number of grid cells on the Y axis.
     pub grid_cells_y: i32,
 
+    /// The name of the tileset used for this layer.
+    pub tileset: String,
+
     /// The tile data.
     ///
     /// You may want to use the `unpack` method rather than accessing this directly.
     #[serde(flatten)]
     pub data: TileLayerStorage,
-
-    /// The name of the tileset used for this layer.
-    pub tileset: String,
 }
 
 impl TileLayer {
@@ -326,8 +363,32 @@ pub enum TileLayerStorage {
     Data2D(Vec<Vec<i32>>),
 }
 
+impl Serialize for TileLayerStorage {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("TileLayerStorage", 3)?;
+
+        match self {
+            TileLayerStorage::Data(data) => {
+                state.serialize_field("data", &data)?;
+                state.serialize_field("exportMode", &0)?;
+                state.serialize_field("arrayMode", &0)?;
+            }
+            TileLayerStorage::Data2D(data) => {
+                state.serialize_field("data2D", &data)?;
+                state.serialize_field("exportMode", &0)?;
+                state.serialize_field("arrayMode", &1)?;
+            }
+        }
+
+        state.end()
+    }
+}
+
 /// A tile co-ords layer.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TileCoordsLayer {
     /// The name of the layer.
@@ -355,14 +416,14 @@ pub struct TileCoordsLayer {
     /// The number of grid cells on the Y axis.
     pub grid_cells_y: i32,
 
+    /// The name of the tileset used for this layer.
+    pub tileset: String,
+
     /// The tile data.
     ///
     /// You may want to use the `unpack` method rather than accessing this directly.
     #[serde(flatten)]
     pub data: TileCoordsLayerStorage,
-
-    /// The name of the tileset used for this layer.
-    pub tileset: String,
 }
 
 impl TileCoordsLayer {
@@ -482,7 +543,7 @@ pub struct TileCoords {
     pub pixel_position: Vec2<i32>,
 }
 
-/// Tile  data from a `TileCoordsLayer`.
+/// Tile data from a `TileCoordsLayer`.
 #[derive(Clone, Debug, Deserialize)]
 pub enum TileCoordsLayerStorage {
     /// A flat list of tile co-ords.
@@ -506,8 +567,32 @@ pub enum TileCoordsLayerStorage {
     DataCoords2D(Vec<Vec<Vec<i32>>>),
 }
 
+impl Serialize for TileCoordsLayerStorage {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("TileCoordsLayerStorage", 3)?;
+
+        match self {
+            TileCoordsLayerStorage::DataCoords(data) => {
+                state.serialize_field("dataCoords", &data)?;
+                state.serialize_field("exportMode", &1)?;
+                state.serialize_field("arrayMode", &0)?;
+            }
+            TileCoordsLayerStorage::DataCoords2D(data) => {
+                state.serialize_field("dataCoords2D", &data)?;
+                state.serialize_field("exportMode", &1)?;
+                state.serialize_field("arrayMode", &1)?;
+            }
+        }
+
+        state.end()
+    }
+}
+
 /// A grid layer.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GridLayer {
     /// The name of the layer.
@@ -556,6 +641,28 @@ pub enum GridLayerStorage {
     /// By default, `"0"` means 'empty', but this is customizable in the editor.
     #[serde(rename = "grid2D")]
     Grid2D(Vec<Vec<String>>),
+}
+
+impl Serialize for GridLayerStorage {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("GridLayerStorage", 2)?;
+
+        match self {
+            GridLayerStorage::Grid(data) => {
+                state.serialize_field("grid", &data)?;
+                state.serialize_field("arrayMode", &0)?;
+            }
+            GridLayerStorage::Grid2D(data) => {
+                state.serialize_field("grid2D", &data)?;
+                state.serialize_field("arrayMode", &1)?;
+            }
+        }
+
+        state.end()
+    }
 }
 
 /// An individual grid cell, unpacked from a `GridLayer`.
@@ -627,7 +734,7 @@ impl GridLayer {
 }
 
 /// An entity layer.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EntityLayer {
     /// The name of the layer.
@@ -660,7 +767,7 @@ pub struct EntityLayer {
 }
 
 /// A decal layer.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DecalLayer {
     /// The name of the layer.
