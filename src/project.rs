@@ -16,6 +16,9 @@ pub struct Project {
     /// The name of the Ogmo project.
     pub name: String,
 
+    /// The version of Ogmo used to export this project.
+    pub ogmo_version: String,
+
     /// An array of paths that hold the project's levels.
     pub level_paths: Vec<PathBuf>,
 
@@ -28,11 +31,11 @@ pub struct Project {
     /// Whether the project describes angles in radians or degrees.
     pub angles_radians: bool,
 
-    /// The default exported file type of a level.
-    pub default_export_mode: String,
-
     /// The maximum depth that the editor will search for levels in its file tree.
     pub directory_depth: i32,
+
+    /// The default grid size for newly created layers.
+    pub layer_grid_default_size: Vec2<i32>,
 
     /// The default size of newly created levels in the editor.
     pub level_default_size: Vec2<i32>,
@@ -46,6 +49,12 @@ pub struct Project {
     /// The value templates for the project's levels.
     pub level_values: Vec<ValueTemplate>,
 
+    /// The default exported file type of a level.
+    pub default_export_mode: String,
+
+    /// Whether the project's files will be exported from the editor in a compact format.
+    pub compact_export: bool,
+
     /// The tags that can be attached to entities.
     pub entity_tags: Vec<String>,
 
@@ -57,9 +66,6 @@ pub struct Project {
 
     /// The project's tilesets.
     pub tilesets: Vec<Tileset>,
-
-    /// The default grid size for newly created layers.
-    pub layer_grid_default_size: Vec2<i32>,
 }
 
 impl Project {
