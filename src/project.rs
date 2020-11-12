@@ -287,8 +287,9 @@ impl LayerTemplate {
 }
 
 /// A tile layer template.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(tag = "definition", rename = "tile")]
 pub struct TileLayerTemplate {
     /// The name of the layer.
     pub name: String,
@@ -310,28 +311,10 @@ pub struct TileLayerTemplate {
     pub default_tileset: String,
 }
 
-impl Serialize for TileLayerTemplate {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut state = serializer.serialize_struct("TileLayerTemplate", 7)?;
-
-        state.serialize_field("definition", "tile")?;
-        state.serialize_field("name", &self.name)?;
-        state.serialize_field("gridSize", &self.grid_size)?;
-        state.serialize_field("exportID", &self.export_id)?;
-        state.serialize_field("exportMode", &self.export_mode)?;
-        state.serialize_field("arrayMode", &self.array_mode)?;
-        state.serialize_field("defaultTileset", &self.default_tileset)?;
-
-        state.end()
-    }
-}
-
 /// A grid layer template.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(tag = "definition", rename = "grid")]
 pub struct GridLayerTemplate {
     /// The name of the layer.
     pub name: String,
@@ -350,27 +333,10 @@ pub struct GridLayerTemplate {
     pub legend: HashMap<String, String>,
 }
 
-impl Serialize for GridLayerTemplate {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut state = serializer.serialize_struct("GridLayerTemplate", 6)?;
-
-        state.serialize_field("definition", "grid")?;
-        state.serialize_field("name", &self.name)?;
-        state.serialize_field("gridSize", &self.grid_size)?;
-        state.serialize_field("exportID", &self.export_id)?;
-        state.serialize_field("arrayMode", &self.array_mode)?;
-        state.serialize_field("legend", &self.legend)?;
-
-        state.end()
-    }
-}
-
 /// An entity layer template.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(tag = "definition", rename = "entity")]
 pub struct EntityLayerTemplate {
     /// The name of the layer.
     pub name: String,
@@ -389,27 +355,10 @@ pub struct EntityLayerTemplate {
     pub excluded_tags: Vec<String>,
 }
 
-impl Serialize for EntityLayerTemplate {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut state = serializer.serialize_struct("EntityLayerTemplate", 6)?;
-
-        state.serialize_field("definition", "entity")?;
-        state.serialize_field("name", &self.name)?;
-        state.serialize_field("gridSize", &self.grid_size)?;
-        state.serialize_field("exportID", &self.export_id)?;
-        state.serialize_field("requiredTags", &self.required_tags)?;
-        state.serialize_field("excludedTags", &self.excluded_tags)?;
-
-        state.end()
-    }
-}
-
 /// A decal layer template.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(tag = "definition", rename = "decal")]
 pub struct DecalLayerTemplate {
     /// The name of the layer.
     pub name: String,
@@ -435,27 +384,6 @@ pub struct DecalLayerTemplate {
 
     /// Value templates associated with this decal layer.
     pub values: Vec<ValueTemplate>,
-}
-
-impl Serialize for DecalLayerTemplate {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut state = serializer.serialize_struct("DecalLayerTemplate", 9)?;
-
-        state.serialize_field("definition", "decal")?;
-        state.serialize_field("name", &self.name)?;
-        state.serialize_field("gridSize", &self.grid_size)?;
-        state.serialize_field("exportID", &self.export_id)?;
-        state.serialize_field("folder", &self.folder)?;
-        state.serialize_field("includeImageSequence", &self.include_image_sequence)?;
-        state.serialize_field("scaleable", &self.scaleable)?;
-        state.serialize_field("rotatable", &self.rotatable)?;
-        state.serialize_field("values", &self.values)?;
-
-        state.end()
-    }
 }
 
 /// Defines whether tile data is stored as IDs or co-oords.
