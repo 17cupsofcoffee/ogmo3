@@ -4,13 +4,14 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use hashbrown::HashMap;
-use serde::Deserialize;
-use serde_repr::Deserialize_repr;
+use serde::ser::SerializeStruct;
+use serde::{Deserialize, Serialize, Serializer};
+use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::{Error, Vec2};
 
 /// An Ogmo project.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Project {
     /// The name of the Ogmo project.
@@ -88,10 +89,28 @@ impl Project {
         let json = fs::read_to_string(path).map_err(Error::Io)?;
         Project::from_json(&json)
     }
+
+    /// Writes the Ogmo project to a JSON string.
+    ///
+    /// # Errors
+    ///
+    /// * `Error::Json` will be returned if serialization fails.
+    pub fn to_json(&self) -> Result<String, Error> {
+        serde_json::to_string(self).map_err(Error::Json)
+    }
+
+    /// Writes the Ogmo project to a pretty-printed JSON string.
+    ///
+    /// # Errors
+    ///
+    /// * `Error::Json` will be returned if serialization fails.
+    pub fn to_json_pretty(&self) -> Result<String, Error> {
+        serde_json::to_string_pretty(self).map_err(Error::Json)
+    }
 }
 
 /// A template for a value.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(tag = "definition")]
 pub enum ValueTemplate {
     /// A boolean value template.
@@ -132,7 +151,7 @@ impl ValueTemplate {
 }
 
 /// A boolean value template.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BooleanValueTemplate {
     /// The name of the value.
@@ -143,7 +162,7 @@ pub struct BooleanValueTemplate {
 }
 
 /// A color value template.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ColorValueTemplate {
     /// The name of the value.
@@ -157,7 +176,7 @@ pub struct ColorValueTemplate {
 }
 
 /// An enum value template.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EnumValueTemplate {
     /// The name of the value.
@@ -171,7 +190,7 @@ pub struct EnumValueTemplate {
 }
 
 /// An integer value template.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IntegerValueTemplate {
     /// The name of the value.
@@ -191,7 +210,7 @@ pub struct IntegerValueTemplate {
 }
 
 /// A float value template.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FloatValueTemplate {
     /// The name of the value.
@@ -211,7 +230,7 @@ pub struct FloatValueTemplate {
 }
 
 /// A string value template.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StringValueTemplate {
     /// The name of the value.
@@ -228,7 +247,7 @@ pub struct StringValueTemplate {
 }
 
 /// A text value template.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TextValueTemplate {
     /// The name of the value.
@@ -239,7 +258,7 @@ pub struct TextValueTemplate {
 }
 
 /// A template for a layer.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum LayerTemplate {
     /// A tile layer template.
@@ -291,6 +310,25 @@ pub struct TileLayerTemplate {
     pub default_tileset: String,
 }
 
+impl Serialize for TileLayerTemplate {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("TileLayerTemplate", 7)?;
+
+        state.serialize_field("definition", "tile")?;
+        state.serialize_field("name", &self.name)?;
+        state.serialize_field("gridSize", &self.grid_size)?;
+        state.serialize_field("exportID", &self.export_id)?;
+        state.serialize_field("exportMode", &self.export_mode)?;
+        state.serialize_field("arrayMode", &self.array_mode)?;
+        state.serialize_field("defaultTileset", &self.default_tileset)?;
+
+        state.end()
+    }
+}
+
 /// A grid layer template.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -312,6 +350,24 @@ pub struct GridLayerTemplate {
     pub legend: HashMap<String, String>,
 }
 
+impl Serialize for GridLayerTemplate {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("GridLayerTemplate", 6)?;
+
+        state.serialize_field("definition", "grid")?;
+        state.serialize_field("name", &self.name)?;
+        state.serialize_field("gridSize", &self.grid_size)?;
+        state.serialize_field("exportID", &self.export_id)?;
+        state.serialize_field("arrayMode", &self.array_mode)?;
+        state.serialize_field("legend", &self.legend)?;
+
+        state.end()
+    }
+}
+
 /// An entity layer template.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -331,6 +387,24 @@ pub struct EntityLayerTemplate {
 
     /// Tags that must not be present for an entity to be displayed on this layer.
     pub excluded_tags: Vec<String>,
+}
+
+impl Serialize for EntityLayerTemplate {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("EntityLayerTemplate", 6)?;
+
+        state.serialize_field("definition", "entity")?;
+        state.serialize_field("name", &self.name)?;
+        state.serialize_field("gridSize", &self.grid_size)?;
+        state.serialize_field("exportID", &self.export_id)?;
+        state.serialize_field("requiredTags", &self.required_tags)?;
+        state.serialize_field("excludedTags", &self.excluded_tags)?;
+
+        state.end()
+    }
 }
 
 /// A decal layer template.
@@ -363,8 +437,29 @@ pub struct DecalLayerTemplate {
     pub values: Vec<ValueTemplate>,
 }
 
+impl Serialize for DecalLayerTemplate {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("DecalLayerTemplate", 9)?;
+
+        state.serialize_field("definition", "decal")?;
+        state.serialize_field("name", &self.name)?;
+        state.serialize_field("gridSize", &self.grid_size)?;
+        state.serialize_field("exportID", &self.export_id)?;
+        state.serialize_field("folder", &self.folder)?;
+        state.serialize_field("includeImageSequence", &self.include_image_sequence)?;
+        state.serialize_field("scaleable", &self.scaleable)?;
+        state.serialize_field("rotatable", &self.rotatable)?;
+        state.serialize_field("values", &self.values)?;
+
+        state.end()
+    }
+}
+
 /// Defines whether tile data is stored as IDs or co-oords.
-#[derive(Clone, Debug, Deserialize_repr)]
+#[derive(Clone, Debug, Deserialize_repr, Serialize_repr)]
 #[repr(u8)]
 pub enum ExportMode {
     /// The tile data is represented by IDs (counting left to right, top to bottom).
@@ -375,7 +470,7 @@ pub enum ExportMode {
 }
 
 /// Defines whether tile data is stored as a 1D array or a 2D array.
-#[derive(Clone, Debug, Deserialize_repr)]
+#[derive(Clone, Debug, Deserialize_repr, Serialize_repr)]
 #[repr(u8)]
 pub enum ArrayMode {
     /// The tile data is stored in a 1D array.
@@ -386,7 +481,7 @@ pub enum ArrayMode {
 }
 
 /// A template for an entity.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EntityTemplate {
     /// The name of the entity.
@@ -463,14 +558,16 @@ pub struct EntityTemplate {
     pub values: Vec<ValueTemplate>,
 
     /// The entity's texture.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub texture: Option<String>,
 
     /// The entity's texture, encoded in base 64.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub texture_image: Option<String>,
 }
 
 /// An entity's shape.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Shape {
     /// The shape's label.
     pub label: String,
@@ -480,7 +577,7 @@ pub struct Shape {
 }
 
 /// A tileset.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Tileset {
     /// The name of the tileset.

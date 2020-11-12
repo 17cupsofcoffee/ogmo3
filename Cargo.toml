@@ -23,3 +23,4 @@ either = "1.6.1"
 [dev-dependencies]
 tetra = "0.5"
 anyhow = "1.0"
+pretty_assertions = "0.6.1"

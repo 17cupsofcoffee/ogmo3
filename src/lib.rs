@@ -9,7 +9,7 @@ use std::error::Error as StdError;
 use std::fmt::{self, Display, Formatter};
 use std::io;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 pub use level::{Layer, Level, Value};
 pub use project::Project;
@@ -43,7 +43,7 @@ impl StdError for Error {
 }
 
 /// An X and Y value.
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Deserialize)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub struct Vec2<T> {
     /// The X component.
     pub x: T,
