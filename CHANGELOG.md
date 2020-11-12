@@ -10,6 +10,7 @@ This project adheres to Semantic Versioning.
 
 ### Added
 
+* Added serialization support.
 * Added `name` getters to various structs.
 
 ## [0.0.4] - 2020-11-09

@@ -5,11 +5,9 @@
 [![Documentation](https://docs.rs/ogmo3/badge.svg)](https://docs.rs/ogmo3)
 [![License](https://img.shields.io/crates/l/ogmo3.svg)](LICENSE)
 
-`ogmo3` is a Rust crate for parsing projects and levels created with [Ogmo Editor 3](https://ogmo-editor-3.github.io/).
+`ogmo3` is a Rust crate for reading and writing [Ogmo Editor 3](https://ogmo-editor-3.github.io/) projects and levels.
 
-It is modelled loosely off the API for Haxe's [`ogmo-3-lib`](https://github.com/Ogmo-Editor-3/ogmo-3-lib) (for now, at least), and aims to provide type-safe access to the entirety of Ogmo's JSON schema.
-
-This crate does _not_ provide a runtime or renderer, but should make it easier to create one tailored to your project.
+It is modelled loosely off the API for Haxe's [`ogmo-3-lib`](https://github.com/Ogmo-Editor-3/ogmo-3-lib) (for now, at least), and aims to provide reasonably type-safe access to the entirety of Ogmo Editor 3.3.0's JSON schema.
 
 ## Installation
 
@@ -31,6 +29,12 @@ fn main() {
 ```
 
 For a full example of how to interpret the data in an Ogmo project, see the [sample code](./examples/sample.rs).
+
+## Caveats
+
+* This crate does _not_ provide a runtime or renderer, but should make it easier to create one tailored to your project.
+* If you deserialize a project/level and then reserialize it, there is no guarentee that the formatting/ordering of fields will be retained, as this would increase the complexity of the library significantly. However, there should never be any loss of data (and if there is, please file a bug report)!
+* This crate has only been tested with Ogmo Editor 3.3.0 - data from earlier versions will likely fail to parse due to missing fields. 
 
 ## License
 

@@ -1,6 +1,6 @@
 [package]
 name = "ogmo3"
-description = "A Rust crate for parsing projects and levels created with Ogmo Editor 3"
+description = "A Rust crate for reading and writing Ogmo Editor 3 projects and levels"
 version = "0.0.4"
 authors = ["Joe Clay <27cupsofcoffee@gmail.com>"]
 edition = "2018"
