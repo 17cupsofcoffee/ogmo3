@@ -14,7 +14,7 @@ It is modelled loosely off the API for Haxe's [`ogmo-3-lib`](https://github.com/
 
 ```toml
 [dependencies]
-ogmo3 = "0.0.4"
+ogmo3 = "0.1"
 ```
 
 ## Usage
