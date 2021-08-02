@@ -193,13 +193,14 @@ impl State<anyhow::Error> for GameState {
                     position,
                 } => {
                     let tileset = &self.tilesets[*tileset];
+                    let rect = tileset.tiles[*tile];
 
-                    graphics::draw(
+                    tileset.texture.draw_region(
                         ctx,
-                        &tileset.texture,
+                        rect,
                         DrawParams::new()
                             .position(*position)
-                            .clip(tileset.tiles[*tile]),
+                            .scale(Vec2::new(1.0, 1.0)),
                     );
                 }
 
@@ -210,17 +211,18 @@ impl State<anyhow::Error> for GameState {
                 } => {
                     let tileset = &self.tilesets[*tileset];
 
-                    graphics::draw(
+                    tileset.texture.draw_region(
                         ctx,
-                        &tileset.texture,
-                        DrawParams::new().position(*position).clip(*uv),
+                        *uv,
+                        DrawParams::new()
+                            .position(*position)
+                            .scale(Vec2::new(1.0, 1.0)),
                     );
                 }
 
                 Sprite::Rect { rect, color } => {
-                    graphics::draw(
+                    self.color_texture.draw(
                         ctx,
-                        &self.color_texture,
                         DrawParams::new()
                             .position(Vec2::new(rect.x, rect.y))
                             .scale(Vec2::new(rect.width, rect.height))
@@ -236,10 +238,14 @@ impl State<anyhow::Error> for GameState {
                 } => {
                     let texture = &self.decals[*decal];
 
-                    graphics::draw(
+                    texture.draw(
                         ctx,
-                        texture,
                         DrawParams::new()
+                            // I had to hardcode values for origin until it looked right
+                            // I'm not sure where the values are suppoed to come from...my b
+                            // Pretty sure there was a bug in the tetra v0.5 version where
+                            // the decals weren't drawing in the correct location due to this.
+                            .origin(Vec2::new(32.0, 8.0))
                             .position(*position)
                             .rotation(*rotation)
                             .scale(*scale),
