@@ -6,6 +6,12 @@ All breaking changes will be explicitly labelled, to make it easier to assess th
 
 This project adheres to Semantic Versioning.
 
+## [Unreleased]
+
+### Changed
+
+* Added note to the docs about decal origins.
+
 ## [0.1.0] - 2020-11-12
 
 ### Added

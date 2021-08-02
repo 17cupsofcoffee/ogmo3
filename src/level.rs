@@ -170,9 +170,15 @@ pub struct Entity {
 #[serde(rename_all = "camelCase")]
 pub struct Decal {
     /// The X position of the decal.
+    ///
+    /// Decals have their origin at the center of the image, so you may need
+    /// to correct for this when rendering.
     pub x: f32,
 
     /// The Y position of the decal.
+    ///
+    /// Decals have their origin at the center of the image, so you may need
+    /// to correct for this when rendering.
     pub y: f32,
 
     /// The scale of the decal on the X axis.
