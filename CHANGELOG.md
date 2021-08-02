@@ -11,6 +11,8 @@ This project adheres to Semantic Versioning.
 ### Changed
 
 * Added note to the docs about decal origins.
+* Updated `hashbrown` to 0.11.
+* Updated `pretty_assertions` to 0.7.
 
 ## [0.1.0] - 2020-11-12
 

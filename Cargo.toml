@@ -17,13 +17,13 @@ categories = ["game-development"]
 serde = { version = "1.0.116", features = ["derive"] } 
 serde_json = "1.0.58"
 serde_repr = "0.1"
-hashbrown = { version = "0.9", features = ["serde"] }
+hashbrown = { version = "0.11", features = ["serde"] }
 either = "1.6.1"
 
 [dev-dependencies]
 tetra = "0.6"
 anyhow = "1.0"
-pretty_assertions = "0.6.1"
+pretty_assertions = "0.7.2"
 
 # This is required to make pretty_assertions run at a reasonable speed:
 [profile.dev.package.difference]
