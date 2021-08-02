@@ -193,15 +193,9 @@ impl State<anyhow::Error> for GameState {
                     position,
                 } => {
                     let tileset = &self.tilesets[*tileset];
-                    let rect = tileset.tiles[*tile];
+                    let uv = tileset.tiles[*tile];
 
-                    tileset.texture.draw_region(
-                        ctx,
-                        rect,
-                        DrawParams::new()
-                            .position(*position)
-                            .scale(Vec2::new(1.0, 1.0)),
-                    );
+                    tileset.texture.draw_region(ctx, uv, *position);
                 }
 
                 Sprite::TileUV {
@@ -211,13 +205,7 @@ impl State<anyhow::Error> for GameState {
                 } => {
                     let tileset = &self.tilesets[*tileset];
 
-                    tileset.texture.draw_region(
-                        ctx,
-                        *uv,
-                        DrawParams::new()
-                            .position(*position)
-                            .scale(Vec2::new(1.0, 1.0)),
-                    );
+                    tileset.texture.draw_region(ctx, *uv, *position);
                 }
 
                 Sprite::Rect { rect, color } => {
@@ -241,11 +229,10 @@ impl State<anyhow::Error> for GameState {
                     texture.draw(
                         ctx,
                         DrawParams::new()
-                            // I had to hardcode values for origin until it looked right
-                            // I'm not sure where the values are suppoed to come from...my b
-                            // Pretty sure there was a bug in the tetra v0.5 version where
-                            // the decals weren't drawing in the correct location due to this.
-                            .origin(Vec2::new(32.0, 8.0))
+                            .origin(Vec2::new(
+                                texture.width() as f32 / 2.0,
+                                texture.height() as f32 / 2.0,
+                            ))
                             .position(*position)
                             .rotation(*rotation)
                             .scale(*scale),
