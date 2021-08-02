@@ -193,14 +193,9 @@ impl State<anyhow::Error> for GameState {
                     position,
                 } => {
                     let tileset = &self.tilesets[*tileset];
+                    let uv = tileset.tiles[*tile];
 
-                    graphics::draw(
-                        ctx,
-                        &tileset.texture,
-                        DrawParams::new()
-                            .position(*position)
-                            .clip(tileset.tiles[*tile]),
-                    );
+                    tileset.texture.draw_region(ctx, uv, *position);
                 }
 
                 Sprite::TileUV {
@@ -210,17 +205,12 @@ impl State<anyhow::Error> for GameState {
                 } => {
                     let tileset = &self.tilesets[*tileset];
 
-                    graphics::draw(
-                        ctx,
-                        &tileset.texture,
-                        DrawParams::new().position(*position).clip(*uv),
-                    );
+                    tileset.texture.draw_region(ctx, *uv, *position);
                 }
 
                 Sprite::Rect { rect, color } => {
-                    graphics::draw(
+                    self.color_texture.draw(
                         ctx,
-                        &self.color_texture,
                         DrawParams::new()
                             .position(Vec2::new(rect.x, rect.y))
                             .scale(Vec2::new(rect.width, rect.height))
@@ -236,10 +226,13 @@ impl State<anyhow::Error> for GameState {
                 } => {
                     let texture = &self.decals[*decal];
 
-                    graphics::draw(
+                    texture.draw(
                         ctx,
-                        texture,
                         DrawParams::new()
+                            .origin(Vec2::new(
+                                texture.width() as f32 / 2.0,
+                                texture.height() as f32 / 2.0,
+                            ))
                             .position(*position)
                             .rotation(*rotation)
                             .scale(*scale),
