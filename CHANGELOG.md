@@ -11,7 +11,7 @@ This project adheres to Semantic Versioning.
 ### Changed
 
 * Added note to the docs about decal origins.
-* Updated `tetra` to 0.6.
+* Updated `tetra` to 0.6. ([@tytrdev](https://github.com/tytrdev) in [#3](https://github.com/17cupsofcoffee/ogmo3/pull/3))
 * Updated `hashbrown` to 0.11.
 * Updated `pretty_assertions` to 0.7.
 
